@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRAWLCHAIN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: rgb(12, 11, 15);
+            --bg-secondary: rgb(18, 16, 22);
+            --panel: rgb(22, 20, 28);
+            --panel-strong: rgb(30, 27, 38);
+
+            --text-bright: rgb(242, 236, 222);
+            --text-primary: rgb(205, 195, 178);
+            --text-muted: rgb(148, 136, 115);
+            --text-dim: rgb(96, 86, 70);
+            --text-faint: rgb(60, 53, 42);
+
+            --accent: rgb(220, 130, 40);
+            --accent-light: rgb(248, 168, 62);
+            --accent-title: rgb(238, 148, 52);
+            --teal: rgb(42, 192, 168);
+
+            --border: rgba(255, 240, 210, 0.08);
+            --border-soft: rgba(255, 240, 210, 0.04);
+            --border-strong: rgba(220, 130, 40, 0.42);
+
+            --glass: rgba(12, 11, 15, 0.93);
+            --shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+            --glow: 0 0 18px rgba(220, 130, 40, 0.38);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image:
+                linear-gradient(rgba(255, 240, 200, 0.038) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 240, 200, 0.038) 1px, transparent 1px);
+            background-size: 32px 32px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        ::selection {
+            background: var(--accent);
+            color: var(--text-bright);
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--text-dim); }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: var(--accent-title);
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: var(--glow);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            margin-top: 6px;
+            text-transform: uppercase;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        /* Card system */
+        .card {
+            border: 2px solid var(--border);
+            background: var(--panel);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--border-strong);
+        }
+
+        .card-label {
+            position: absolute;
+            top: -10px;
+            left: 16px;
+            background: var(--panel);
+            padding: 0 10px;
+            color: var(--accent);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Query input */
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .prompt-char {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .input-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 8px 0;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-row input:focus {
+            border-bottom-color: var(--accent);
+        }
+
+        .input-row input::placeholder {
+            color: var(--text-faint);
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 8px 20px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.15s;
+        }
+
+        .btn:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: var(--glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            background: transparent;
+            color: var(--accent);
+            box-shadow: none;
+        }
+
+        .btn-sm {
+            font-size: 0.65rem;
+            padding: 4px 10px;
+            border-width: 1px;
+        }
+
+        /* Response */
+        #response {
+            min-height: 80px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .thinking {
+            color: var(--text-dim);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+        }
+
+        #stats-bar {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-soft);
+            letter-spacing: 1px;
+        }
+
+        /* Sources */
+        #sources { display: none; }
+        #sources.visible { display: block; }
+
+        .source-item {
+            margin-bottom: 10px;
+            font-size: 0.75rem;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .source-item::before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .source-item a {
+            color: var(--text-bright);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .source-item a:hover {
+            color: var(--accent);
+        }
+
+        .source-distance {
+            color: var(--text-dim);
+            font-size: 0.65rem;
+        }
+
+        /* Status grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 24px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-soft);
+            font-size: 0.75rem;
+        }
+
+        .stat-row span:first-child {
+            color: var(--text-muted);
+        }
+
+        .stat-val {
+            color: var(--accent-light);
+        }
+
+        .stat-val.online {
+            color: var(--teal);
+            font-weight: 600;
+        }
+
+        .stat-val.offline {
+            color: #e05555;
+            font-weight: 600;
+        }
+
+        /* Config panel */
+        #config-box { display: none; }
+        #config-box.visible { display: block; }
+
+        #config-box label {
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            display: block;
+            margin-top: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #config-box input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 0.8rem;
+            padding: 6px 0;
+            width: 100%;
+            outline: none;
+        }
+
+        #config-box input:focus {
+            border-bottom-color: var(--accent);
+        }
+
+        footer {
+            margin-top: 48px;
+            font-size: 0.7rem;
+            color: var(--text-faint);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border: 1px solid var(--teal);
+            color: var(--teal);
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in { animation: fadeInUp 0.1s ease-out; }
+
+        @media (max-width: 600px) {
+            .status-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ─── CONNECT SCREEN ─── -->
+<div id="connect-screen" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="header">
+        <h1>CRAWLCHAIN</h1>
+        <p>crawl > embed > retrieve > answer</p>
+    </div>
+    <div class="container">
+        <div class="card fade-in">
+            <div class="card-label">[Connect]</div>
+            <div style="margin-bottom:16px; color:var(--text-muted); font-size:0.8rem;">
+                Enter your Crawlchain API endpoint (skytunnel URL or localhost)
+            </div>
+            <div class="input-row">
+                <span class="prompt-char">></span>
+                <input type="text" id="connect-url" placeholder="https://your-tunnel.skytunnel.dev" autofocus
+                       onkeydown="if(event.key==='Enter')connect()">
+                <button class="btn" id="connect-btn" onclick="connect()">[Connect]</button>
+            </div>
+            <div id="connect-status" style="margin-top:14px; font-size:0.75rem;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── MAIN APP (hidden until connected) ─── -->
+<div id="main-app" style="display:none; width:100%; display:none; flex-direction:column; align-items:center;">
+    <div class="header">
+        <h1>CRAWLCHAIN</h1>
+        <p>crawl > embed > retrieve > answer <span class="badge" id="conn-badge">connected</span></p>
+    </div>
+
+    <div class="container">
+
+        <div class="card fade-in">
+            <div class="card-label">[Query]</div>
+            <div class="input-row">
+                <span class="prompt-char">></span>
+                <input type="text" id="question" placeholder="ask anything about crawled data..."
+                       onkeydown="if(event.key==='Enter')ask()">
+                <button class="btn" id="ask-btn" onclick="ask()">[Ask]</button>
+            </div>
+        </div>
+
+        <div class="card fade-in">
+            <div class="card-label">[Response]</div>
+            <div id="response"><span class="thinking">awaiting query...</span></div>
+            <div id="stats-bar"></div>
+        </div>
+
+        <div class="card fade-in">
+            <div class="card-label">[Sources]</div>
+            <div id="sources"></div>
+            <div id="no-sources" style="color:var(--text-dim); font-size:0.75rem;">no query yet</div>
+        </div>
+
+        <div class="card fade-in">
+            <div class="card-label">[System Status]</div>
+            <div class="status-grid">
+                <div>
+                    <div class="stat-row"><span>Ollama</span><span class="stat-val" id="s-ollama">...</span></div>
+                    <div class="stat-row"><span>ChromaDB</span><span class="stat-val" id="s-chromadb">...</span></div>
+                    <div class="stat-row"><span>Embed Model</span><span class="stat-val" id="s-embed">...</span></div>
+                </div>
+                <div>
+                    <div class="stat-row"><span>Chat Model</span><span class="stat-val" id="s-chat">...</span></div>
+                    <div class="stat-row"><span>Chunks</span><span class="stat-val" id="s-chunks">...</span></div>
+                    <div class="stat-row"><span>Collection</span><span class="stat-val" id="s-collection">...</span></div>
+                </div>
+            </div>
+            <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.7rem; color:var(--text-dim);" id="connected-to"></span>
+                <button class="btn btn-sm" onclick="disconnect()">[Disconnect]</button>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>crawlchain // built with searxng + ollama + chromadb</footer>
+</div>
+
+<script>
+    let API_URL = '';
+    let statsInterval = null;
+
+    // ─── Connect / Disconnect ───
+
+    async function connect() {
+        const input = document.getElementById('connect-url');
+        const status = document.getElementById('connect-status');
+        const btn = document.getElementById('connect-btn');
+        let url = input.value.trim().replace(/\/+$/, '');
+
+        if (!url) return;
+        if (!url.startsWith('http')) url = 'https://' + url;
+
+        btn.disabled = true;
+        status.innerHTML = '<span class="thinking">connecting...</span>';
+
+        try {
+            const resp = await fetch(url + '/stats');
+            const data = await resp.json();
+
+            if (data.chunks !== undefined) {
+                API_URL = url;
+                localStorage.setItem('crawlchain_api', url);
+                showApp();
+            } else {
+                status.innerHTML = '<span style="color:#e05555;">invalid endpoint — /stats returned unexpected data</span>';
+            }
+        } catch (e) {
+            status.innerHTML = `<span style="color:#e05555;">failed: ${e.message}</span>`;
+        }
+
+        btn.disabled = false;
+    }
+
+    function disconnect() {
+        API_URL = '';
+        localStorage.removeItem('crawlchain_api');
+        if (statsInterval) clearInterval(statsInterval);
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('connect-screen').style.display = 'flex';
+        document.getElementById('connect-url').focus();
+    }
+
+    function showApp() {
+        document.getElementById('connect-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+        document.getElementById('connected-to').textContent = API_URL;
+        document.getElementById('question').focus();
+        fetchStats();
+        statsInterval = setInterval(fetchStats, 15000);
+    }
+
+    // ─── Auto-reconnect from localStorage ───
+
+    (function init() {
+        const saved = localStorage.getItem('crawlchain_api');
+        if (saved) {
+            API_URL = saved;
+            document.getElementById('connect-url').value = saved;
+            // Verify it's still up
+            fetch(saved + '/stats').then(r => r.json()).then(data => {
+                if (data.chunks !== undefined) showApp();
+            }).catch(() => {
+                // Saved URL is stale, show connect screen
+            });
+        }
+    })();
+
+    // ─── Stats ───
+
+    async function fetchStats() {
+        try {
+            const resp = await fetch(API_URL + '/stats');
+            const data = await resp.json();
+            const set = (id, val, cls) => {
+                const el = document.getElementById(id);
+                el.textContent = val;
+                el.className = 'stat-val' + (cls ? ' ' + cls : '');
+            };
+            set('s-ollama', data.ollama || 'offline', data.ollama === 'online' ? 'online' : 'offline');
+            set('s-chromadb', data.chromadb || 'offline', data.chromadb === 'online' ? 'online' : 'offline');
+            set('s-embed', data.embed_model || '?');
+            set('s-chat', data.chat_model || '?');
+            set('s-chunks', data.chunks || '0');
+            set('s-collection', data.collection || '?');
+        } catch (e) {
+            document.getElementById('s-ollama').textContent = 'API OFFLINE';
+            document.getElementById('s-ollama').className = 'stat-val offline';
+        }
+    }
+
+    // ─── Ask ───
+
+    async function ask() {
+        const input = document.getElementById('question');
+        const question = input.value.trim();
+        if (!question) return;
+
+        const btn = document.getElementById('ask-btn');
+        const responseEl = document.getElementById('response');
+        const sourcesEl = document.getElementById('sources');
+        const noSources = document.getElementById('no-sources');
+        const statsBar = document.getElementById('stats-bar');
+
+        btn.disabled = true;
+        responseEl.innerHTML = '<span class="thinking">searching knowledge base...</span>';
+        sourcesEl.innerHTML = '';
+        sourcesEl.classList.remove('visible');
+        noSources.style.display = 'none';
+        statsBar.textContent = '';
+
+        try {
+            const resp = await fetch(API_URL + '/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question }),
+            });
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let started = false;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const lines = decoder.decode(value).split('\n').filter(l => l.trim());
+                for (const line of lines) {
+                    let msg;
+                    try { msg = JSON.parse(line); } catch { continue; }
+
+                    if (msg.type === 'sources') {
+                        let html = '';
+                        for (const s of msg.data) {
+                            const dist = (s.distance * 100).toFixed(1);
+                            html += `<div class="source-item"><a href="${s.url}" target="_blank">${s.title || s.url}</a> <span class="source-distance">${dist}% distance</span></div>`;
+                        }
+                        sourcesEl.innerHTML = html;
+                        sourcesEl.classList.add('visible');
+                    }
+
+                    if (msg.type === 'token') {
+                        if (!started) {
+                            responseEl.textContent = '';
+                            started = true;
+                        }
+                        responseEl.textContent += msg.data;
+                    }
+
+                    if (msg.type === 'done') {
+                        statsBar.textContent = `${msg.tokens} tokens  //  ${msg.elapsed}s  //  ${msg.tok_s} tok/s`;
+                    }
+
+                    if (msg.type === 'error') {
+                        responseEl.innerHTML = `<span style="color:#e05555;">error: ${msg.data}</span>`;
+                    }
+                }
+            }
+        } catch (e) {
+            responseEl.innerHTML = `<span style="color:#e05555;">connection failed: ${e.message}</span>`;
+        }
+
+        btn.disabled = false;
+        input.focus();
+    }
+</script>
+
+</body>
+</html>
