@@ -25,7 +25,7 @@ csv.field_size_limit(10 * 1024 * 1024)  # 10MB max field size
 CHROMADB_URL   = "http://localhost:8000"
 OLLAMA_URL     = "http://localhost:11434"
 EMBED_MODEL    = "nomic-embed-text"
-COLLECTION     = "crawlchain"
+COLLECTION     = "webcrawler"
 CHUNK_MAX_WORDS = 300  # split chunks larger than this
 
 

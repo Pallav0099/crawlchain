@@ -21,7 +21,7 @@ CHROMADB_URL  = "http://localhost:8000"
 OLLAMA_URL    = "http://localhost:11434"
 EMBED_MODEL   = "nomic-embed-text"
 CHAT_MODEL    = "phi4-mini:3.8b-q4_K_M"
-COLLECTION    = "crawlchain"
+COLLECTION    = "webcrawler"
 TOP_K         = 5
 
 SYSTEM_PROMPT = """You are a helpful assistant that answers questions based on retrieved web data.

@@ -22,7 +22,7 @@ CHROMADB_URL  = "http://localhost:8000"
 OLLAMA_URL    = "http://localhost:11434"
 EMBED_MODEL   = "nomic-embed-text"
 CHAT_MODEL    = "phi4-mini:3.8b-q4_K_M"
-COLLECTION    = "crawlchain"
+COLLECTION    = "webcrawler"
 TOP_K         = 5
 PORT          = 5000
 
@@ -33,7 +33,7 @@ Cite the source URL when referencing specific information."""
 csv.field_size_limit(10 * 1024 * 1024)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=False)
 
 # ChromaDB client (lazy init)
 
@@ -162,7 +162,10 @@ Question: {question}"""
         except Exception as e:
             yield json.dumps({"type": "error", "data": str(e)}) + "\n"
 
-    return Response(generate(), mimetype="text/plain")
+    resp = Response(generate(), mimetype="text/plain")
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return resp
 
 
 @app.route("/stats", methods=["GET"])
@@ -205,10 +208,17 @@ if __name__ == "__main__":
     try:
         c = chromadb.HttpClient(host="localhost", port=8000)
         c.heartbeat()
+        print("OK")
+    except Exception:
+        print("FAIL — run: docker start chromadb")
+        sys.exit(1)
+
+    print(f"Checking collection '{COLLECTION}' ...", end=" ", flush=True)
+    try:
         col = c.get_collection(name=COLLECTION)
         print(f"OK ({col.count()} chunks)")
     except Exception:
-        print("FAIL — run: docker start chromadb")
+        print("NOT FOUND — run: python3 ingest.py wiki_dataset.csv")
         sys.exit(1)
 
     print(f"\nServer running on http://localhost:{PORT}")
